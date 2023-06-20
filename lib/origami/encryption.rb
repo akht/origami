@@ -22,6 +22,7 @@ require 'openssl'
 require 'securerandom'
 require 'digest/md5'
 require 'digest/sha2'
+require 'rc4'
 
 module Origami
 
@@ -545,21 +546,13 @@ module Origami
                 @key = key
             end
 
-            #
-            # Encrypt/decrypt data with the RC4 encryption algorithm
-            #
-            def cipher(data)
-                return '' if data.empty?
-
-                rc4 = OpenSSL::Cipher::RC4.new.encrypt
-                rc4.key_len = @key.length
-                rc4.key = @key
-
-                rc4.update(data) + rc4.final
+            def decrypt(data)
+                ::RC4.new(@key).decrypt(data)
             end
 
-            alias encrypt cipher
-            alias decrypt cipher
+            def encrypt(data)
+                ::RC4.new(@key).encrypt(data)
+            end
         end
 
         #
