@@ -1074,7 +1074,8 @@ module Origami
                     xrefs.clear
                 end
 
-                xrefs << XRef.new(get_object_offset(object.no, object.generation), object.generation, XRef::USED)
+                object_offset = object_offset_memo["#{object.no}:#{object.generation}"]
+                xrefs << XRef.new(object_offset, object.generation, XRef::USED)
 
                 lastno = object.no
             end
@@ -1082,6 +1083,34 @@ module Origami
             xrefsection << XRef::Subsection.new(brange, xrefs)
 
             xrefsection
+        end
+
+        def object_offset_memo
+            # { "object.no:object.generation" => objectoffset }
+            @object_offset_memo ||= {}
+        end
+
+        def calc_object_offset
+            object_size_memo = {}
+            objectoffset = @header.to_s.size
+
+            @revisions.each do |revision|
+                prev_object_no = -1
+                revision.objects.sort_by {|object| object.reference }
+                        .each_with_index do |object, index|
+                    object_size_memo["#{object.no}:#{object.generation}"] = object.to_s.size
+
+                    unless index == 0
+                        objectoffset += object_size_memo["#{prev_object_no}:#{object.generation}"]
+                    end
+
+                    object_offset_memo["#{object.no}:#{object.generation}"] = objectoffset
+                    prev_object_no = object.no
+                end
+
+                objectoffset += revision.xreftable.to_s.size
+                objectoffset += revision.trailer.to_s.size
+            end
         end
 
         def get_object_offset(no, generation) #:nodoc:
