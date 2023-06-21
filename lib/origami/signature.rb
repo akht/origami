@@ -155,11 +155,9 @@ module Origami
             #
             rebuild_dummy_xrefs
 
-
-            # Calculating object offset for memoization
-            calc_object_offset
-
-            sig_offset = object_offset_memo["#{digsig.no}:#{digsig.generation}"] + digsig.signature_offset
+            # object_offset_memo is not referenced here
+            # because object_offset_memo must be recalculated when the value of `digsig.ByteRange` is changed
+            sig_offset = get_object_offset(digsig.no, digsig.generation) + digsig.signature_offset
 
             digsig.ByteRange[0] = 0
             digsig.ByteRange[1] = sig_offset
