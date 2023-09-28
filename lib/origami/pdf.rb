@@ -1091,22 +1091,17 @@ module Origami
         end
 
         def calc_object_offset
-            size_memo = {}
             offset_memo = {}
             objectoffset = @header.to_s.size
 
+            prev_objectoffset = 0
             @revisions.each do |revision|
-                prev_object_no = -1
                 revision.objects.sort_by {|object| object.reference }
                         .each_with_index do |object, index|
-                    size_memo["#{object.no}:#{object.generation}"] = object.to_s.size
-
-                    unless index == 0
-                        objectoffset += size_memo["#{prev_object_no}:#{object.generation}"]
-                    end
+                    objectoffset += prev_objectoffset
 
                     offset_memo["#{object.no}:#{object.generation}"] = objectoffset
-                    prev_object_no = object.no
+                    prev_objectoffset = object.to_s.size
                 end
 
                 objectoffset += revision.xreftable.to_s.size
